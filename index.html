@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>二狗游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            background-color: #222;
+            color: white;
+            touch-action: manipulation;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 开场画面样式 */
+        #splash-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e5799 0%,#2989d8 50%,#207cca 51%,#7db9e8 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 100;
+        }
+        
+        #splash-screen h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* 登录界面样式 */
+        #login-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #333, #111);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 90;
+        }
+        
+        #login-form, #register-form {
+            background-color: rgba(0,0,0,0.7);
+            padding: 30px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .form-title {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #2989d8;
+            color: white;
+            cursor: pointer;
+            margin: 5px;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #1e5799;
+        }
+        
+        .switch-form {
+            margin-top: 15px;
+            color: #aaa;
+            cursor: pointer;
+        }
+        
+        .switch-form:hover {
+            color: white;
+        }
+        
+        /* 主菜单样式 */
+        #main-menu {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #222, #000);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 80;
+        }
+        
+        #menu-title {
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .menu-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: #2989d8;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            margin: 10px;
+            width: 200px;
+            text-align: center;
+        }
+        
+        .menu-btn:hover {
+            background-color: #1e5799;
+        }
+        
+        #player-coins {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        
+        /* 商店界面 */
+        #shop-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #222, #000);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            z-index: 85;
+        }
+        
+        #shop-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .shop-item {
+            width: 80%;
+            max-width: 400px;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .item-info {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .item-price {
+            color: gold;
+        }
+        
+        .buy-btn {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .buy-btn:hover {
+            background-color: #45a049;
+        }
+        
+        .buy-btn:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+        
+        #back-to-menu {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ff5722;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        /* 设置界面 */
+        #settings-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #222, #000);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            z-index: 85;
+        }
+        
+        #settings-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .setting-item {
+            width: 80%;
+            max-width: 400px;
+            background-color: rgba(0,0,0,0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .setting-name {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        /* 游戏界面 */
+        #game-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #111;
+            display: none;
+            flex-direction: column;
+            z-index: 70;
+        }
+        
+        #game-header {
+            padding: 10px;
+            background-color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #player-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        #player-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #2989d8;
+            margin-right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+        
+        #game-area {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #000;
+            overflow: hidden;
+        }
+        
+        #player {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-color: #2989d8;
+            border-radius: 50%;
+            left: 50%;
+            bottom: 100px;
+            transform: translateX(-50%);
+        }
+        
+        .enemy {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #ff5722;
+            border-radius: 50%;
+        }
+        
+        .bullet {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: #ffeb3b;
+            border-radius: 5px;
+        }
+        
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: gold;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        #score-display {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        #health-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        #game-over {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #game-over h2 {
+            font-size: 2.5rem;
+            color: #ff5722;
+            margin-bottom: 20px;
+        }
+        
+        #final-score {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+        
+        #restart-btn {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: #2989d8;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        /* 控制按钮 */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 10;
+        }
+        
+        #move-controls {
+            display: flex;
+            gap: 20px;
+        }
+        
+        #fire-control {
+            margin-left: auto;
+        }
+        
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5rem;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        #fire-btn {
+            background-color: rgba(255, 0, 0, 0.5);
+        }
+        
+        #fire-btn:active {
+            background-color: rgba(255, 0, 0, 0.8);
+        }
+        
+        .control-btn:active {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* 横屏提示 */
+        #orientation-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 200;
+        }
+        
+        #orientation-message p {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- 开场画面 -->
+        <div id="splash-screen">
+            <h1>二狗游戏</h1>
+            <p>加载中...</p>
+        </div>
+        
+        <!-- 登录界面 -->
+        <div id="login-screen">
+            <div id="login-form">
+                <h2 class="form-title">登录</h2>
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" placeholder="请输入密码">
+                </div>
+                <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 15px;">账户只能在本设备登录</p>
+                <button id="login-btn" class="btn">登录</button>
+                <p class="switch-form" id="show-register">注册新账户</p>
+            </div>
+            
+            <div id="register-form" style="display: none;">
+                <h2 class="form-title">注册</h2>
+                <div class="form-group">
+                    <label for="reg-username">用户名</label>
+                    <input type="text" id="reg-username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">密码</label>
+                    <input type="password" id="reg-password" placeholder="请输入密码">
+                </div>
+                <div class="form-group">
+                    <label for="reg-password2">重复密码</label>
+                    <input type="password" id="reg-password2" placeholder="请再次输入密码">
+                </div>
+                <button id="register-btn" class="btn">注册</button>
+                <p class="switch-form" id="show-login">返回登录</p>
+            </div>
+        </div>
+        
+        <!-- 主菜单 -->
+        <div id="main-menu">
+            <h1 id="menu-title">飞机大战</h1>
+            <button id="start-game-btn" class="menu-btn">开始游戏</button>
+            <button id="shop-btn" class="menu-btn">商店</button>
+            <button id="settings-btn" class="menu-btn">设置</button>
+            <button id="quit-game-btn" class="menu-btn">退出游戏</button>
+            <div id="player-coins">金币: 0</div>
+        </div>
+        
+        <!-- 商店界面 -->
+        <div id="shop-screen">
+            <h1 id="shop-title">商店</h1>
+            <div class="shop-item">
+                <div class="item-info">
+                    <div class="item-name">额外生命</div>
+                    <div class="item-desc">增加一条生命</div>
+                    <div class="item-price">价格: 100金币</div>
+                </div>
+                <button class="buy-btn" id="buy-health">购买</button>
+            </div>
+            <div class="shop-item">
+                <div class="item-info">
+                    <div class="item-name">双倍分数</div>
+                    <div class="item-desc">游戏得分翻倍</div>
+                    <div class="item-price">价格: 200金币</div>
+                </div>
+                <button class="buy-btn" id="buy-double">购买</button>
+            </div>
+            <div class="shop-item">
+                <div class="item-info">
+                    <div class="item-name">护盾</div>
+                    <div class="item-desc">抵挡一次伤害</div>
+                    <div class="item-price">价格: 150金币</div>
+                </div>
+                <button class="buy-btn" id="buy-shield">购买</button>
+            </div>
+            <button id="back-to-menu">返回主菜单</button>
+        </div>
+        
+        <!-- 设置界面 -->
+        <div id="settings-screen">
+            <h1 id="settings-title">设置</h1>
+            <div class="setting-item">
+                <div class="setting-name">音量控制</div>
+                <input type="range" id="volume-control" min="0" max="100" value="50">
+            </div>
+            <div class="setting-item">
+                <div class="setting-name">控制方式</div>
+                <select id="control-type">
+                    <option value="buttons">屏幕按钮</option>
+                    <option value="keyboard">键盘控制</option>
+                </select>
+            </div>
+            <button id="back-to-menu-from-settings">返回主菜单</button>
+        </div>
+        
+        <!-- 游戏界面 -->
+        <div id="game-screen">
+            <div id="game-header">
+                <div id="player-info">
+                    <div id="player-avatar">P</div>
+                    <span id="player-name">玩家</span>
+                </div>
+                <button id="back-to-menu-btn" class="btn">返回菜单</button>
+            </div>
+            
+            <div id="game-area">
+                <div id="player"></div>
+                <div id="score-display">分数: 0</div>
+                <div id="health-display">生命: 3</div>
+                
+                <!-- 控制按钮 -->
+                <div id="controls">
+                    <div id="move-controls">
+                        <div id="left-btn" class="control-btn">←</div>
+                        <div id="right-btn" class="control-btn">→</div>
+                    </div>
+                    <div id="fire-control">
+                        <div id="fire-btn" class="control-btn">🔥</div>
+                    </div>
+                </div>
+                
+                <div id="game-over">
+                    <h2>游戏结束</h2>
+                    <div id="final-score">最终分数: 0</div>
+                    <button id="restart-btn">重新开始</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 横屏提示 -->
+        <div id="orientation-message">
+            <p>请将设备横屏以获得最佳游戏体验</p>
+        </div>
+    </div>
+
+    <script>
+        // 本地存储键名
+        const STORAGE_KEYS = {
+            ACCOUNTS: 'erGouGameAccounts',
+            PLAYER_DATA: 'erGouGamePlayerData'
+        };
+        
+        // 游戏状态
+        const gameState = {
+            player: {
+                name: '玩家',
+                score: 0,
+                health: 3,
+                coins: 0,
+                position: 0,
+                isMovingLeft: false,
+                isMovingRight: false,
+                items: {
+                    doubleScore: false,
+                    shield: false
+                }
+            },
+            gameActive: false,
+            enemies: [],
+            bullets: [],
+            coins: [],
+            lastEnemySpawn: 0,
+            lastCoinSpawn: 0,
+            keysPressed: {},
+            lastFireTime: 0,
+            fireCooldown: 300,
+            currentScreen: 'login'
+        };
+        
+        // DOM元素
+        const elements = {
+            splashScreen: document.getElementById('splash-screen'),
+            loginScreen: document.getElementById('login-screen'),
+            mainMenu: document.getElementById('main-menu'),
+            shopScreen: document.getElementById('shop-screen'),
+            settingsScreen: document.getElementById('settings-screen'),
+            gameScreen: document.getElementById('game-screen'),
+            gameArea: document.getElementById('game-area'),
+            player: document.getElementById('player'),
+            playerName: document.getElementById('player-name'),
+            playerAvatar: document.getElementById('player-avatar'),
+            playerCoins: document.getElementById('player-coins'),
+            startGameBtn: document.getElementById('start-game-btn'),
+            shopBtn: document.getElementById('shop-btn'),
+            settingsBtn: document.getElementById('settings-btn'),
+            quitGameBtn: document.getElementById('quit-game-btn'),
+            backToMenuBtn: document.getElementById('back-to-menu-btn'),
+            backToMenuFromShop: document.getElementById('back-to-menu'),
+            backToMenuFromSettings: document.getElementById('back-to-menu-from-settings'),
+            gameStartBtn: document.getElementById('game-start-btn'),
+            scoreDisplay: document.getElementById('score-display'),
+            healthDisplay: document.getElementById('health-display'),
+            gameOver: document.getElementById('game-over'),
+            finalScore: document.getElementById('final-score'),
+            restartBtn: document.getElementById('restart-btn'),
+            orientationMessage: document.getElementById('orientation-message'),
+            leftBtn: document.getElementById('left-btn'),
+            rightBtn: document.getElementById('right-btn'),
+            fireBtn: document.getElementById('fire-btn'),
+            buyHealthBtn: document.getElementById('buy-health'),
+            buyDoubleBtn: document.getElementById('buy-double'),
+            buyShieldBtn: document.getElementById('buy-shield'),
+            usernameInput: document.getElementById('username'),
+            passwordInput: document.getElementById('password'),
+            regUsernameInput: document.getElementById('reg-username'),
+            regPasswordInput: document.getElementById('reg-password'),
+            regPassword2Input: document.getElementById('reg-password2')
+        };
+        
+        // 从本地存储获取账户数据
+        function getAccountsFromStorage() {
+            const accountsJson = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
+            return accountsJson ? JSON.parse(accountsJson) : {};
+        }
+        
+        // 保存账户数据到本地存储
+        function saveAccountsToStorage(accounts) {
+            localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(accounts));
+        }
+        
+        // 从本地存储获取玩家数据
+        function getPlayerDataFromStorage(username) {
+            const allDataJson = localStorage.getItem(STORAGE_KEYS.PLAYER_DATA);
+            const allData = allDataJson ? JSON.parse(allDataJson) : {};
+            return allData[username] || {
+                coins: 0,
+                items: {
+                    doubleScore: false,
+                    shield: false
+                }
+            };
+        }
+        
+        // 保存玩家数据到本地存储
+        function savePlayerDataToStorage(username, data) {
+            const allDataJson = localStorage.getItem(STORAGE_KEYS.PLAYER_DATA);
+            const allData = allDataJson ? JSON.parse(allDataJson) : {};
+            allData[username] = data;
+            localStorage.setItem(STORAGE_KEYS.PLAYER_DATA, JSON.stringify(allData));
+        }
+        
+        // 检查账户是否存在
+        function accountExists(username) {
+            const accounts = getAccountsFromStorage();
+            return accounts.hasOwnProperty(username);
+        }
+        
+        // 验证账户密码
+        function validateAccount(username, password) {
+            const accounts = getAccountsFromStorage();
+            return accounts[username] && accounts[username] === password;
+        }
+        
+        // 注册新账户
+        function registerAccount(username, password) {
+            const accounts = getAccountsFromStorage();
+            accounts[username] = password;
+            saveAccountsToStorage(accounts);
+            
+            // 初始化玩家数据
+            const playerData = {
+                coins: 0,
+                items: {
+                    doubleScore: false,
+                    shield: false
+                }
+            };
+            savePlayerDataToStorage(username, playerData);
+        }
+        
+        // 更新UI显示玩家数据
+        function updatePlayerDataUI() {
+            elements.playerCoins.textContent = `金币: ${gameState.player.coins}`;
+        }
+        
+        // 检查横屏
+        function checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+                elements.orientationMessage.style.display = 'flex';
+            } else {
+                elements.orientationMessage.style.display = 'none';
+            }
+        }
+        
+        // 切换屏幕
+        function showScreen(screenName) {
+            // 隐藏所有屏幕
+            elements.loginScreen.style.display = 'none';
+            elements.mainMenu.style.display = 'none';
+            elements.shopScreen.style.display = 'none';
+            elements.settingsScreen.style.display = 'none';
+            elements.gameScreen.style.display = 'none';
+            
+            // 显示目标屏幕
+            switch(screenName) {
+                case 'login':
+                    elements.loginScreen.style.display = 'flex';
+                    break;
+                case 'menu':
+                    elements.mainMenu.style.display = 'flex';
+                    updatePlayerDataUI();
+                    break;
+                case 'shop':
+                    elements.shopScreen.style.display = 'flex';
+                    break;
+                case 'settings':
+                    elements.settingsScreen.style.display = 'flex';
+                    break;
+                case 'game':
+                    elements.gameScreen.style.display = 'flex';
+                    break;
+            }
+            
+            gameState.currentScreen = screenName;
+        }
+        
+        // 初始化游戏
+        function initGame() {
+            // 重置游戏状态
+            gameState.player.score = 0;
+            gameState.player.health = 3;
+            gameState.player.position = 0;
+            gameState.gameActive = true;
+            gameState.enemies = [];
+            gameState.bullets = [];
+            gameState.coins = [];
+            gameState.lastEnemySpawn = 0;
+            gameState.lastCoinSpawn = 0;
+            gameState.lastFireTime = 0;
+            
+            // 更新UI
+            elements.scoreDisplay.textContent = `分数: ${gameState.player.score}`;
+            elements.healthDisplay.textContent = `生命: ${gameState.player.health}`;
+            elements.gameOver.style.display = 'none';
+            
+            // 清除所有敌人、子弹和金币
+            document.querySelectorAll('.enemy, .bullet, .coin').forEach(el => el.remove());
+            
+            // 重置玩家位置
+            elements.player.style.left = '50%';
+            elements.player.style.bottom = '100px';
+            gameState.player.position = window.innerWidth / 2;
+            
+            // 开始游戏循环
+            gameLoop();
+        }
+        
+        // 游戏主循环
+        function gameLoop() {
+            if (!gameState.gameActive) return;
+            
+            const now = Date.now();
+            
+            // 生成敌人
+            if (now - gameState.lastEnemySpawn > 1500) {
+                spawnEnemy();
+                gameState.lastEnemySpawn = now;
+            }
+            
+            // 生成金币
+            if (now - gameState.lastCoinSpawn > 3000) {
+                spawnCoin();
+                gameState.lastCoinSpawn = now;
+            }
+            
+            // 移动玩家
+            movePlayer();
+            
+            // 移动子弹
+            moveBullets();
+            
+            // 移动敌人
+            moveEnemies();
+            
+            // 移动金币
+            moveCoins();
+            
+            // 检测碰撞
+            checkCollisions();
+            
+            // 继续循环
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 生成敌人
+        function spawnEnemy() {
+            const enemy = document.createElement('div');
+            enemy.className = 'enemy';
+            enemy.style.left = `${Math.random() * (window.innerWidth - 40)}px`;
+            enemy.style.top = '-40px';
+            elements.gameArea.appendChild(enemy);
+            
+            gameState.enemies.push({
+                element: enemy,
+                x: parseInt(enemy.style.left),
+                y: -40,
+                speed: 2 + Math.random() * 3
+            });
+        }
+        
+        // 生成金币
+        function spawnCoin() {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.textContent = '$';
+            coin.style.left = `${Math.random() * (window.innerWidth - 30)}px`;
+            coin.style.top = '-30px';
+            elements.gameArea.appendChild(coin);
+            
+            gameState.coins.push({
+                element: coin,
+                x: parseInt(coin.style.left),
+                y: -30,
+                speed: 1 + Math.random() * 2,
+                value: gameState.player.items.doubleScore ? 20 : 10
+            });
+        }
+        
+        // 移动玩家
+        function movePlayer() {
+            const playerSpeed = 8;
+            
+            if (gameState.isMovingLeft && gameState.player.position > 25) {
+                gameState.player.position -= playerSpeed;
+            }
+            
+            if (gameState.isMovingRight && gameState.player.position < window.innerWidth - 25) {
+                gameState.player.position += playerSpeed;
+            }
+            
+            elements.player.style.left = `${gameState.player.position}px`;
+        }
+        
+        // 移动子弹
+        function moveBullets() {
+            for (let i = gameState.bullets.length - 1; i >= 0; i--) {
+                const bullet = gameState.bullets[i];
+                bullet.y -= 8;
+                bullet.element.style.top = `${bullet.y}px`;
+                
+                // 移除超出屏幕的子弹
+                if (bullet.y < -20) {
+                    bullet.element.remove();
+                    gameState.bullets.splice(i, 1);
+                }
+            }
+        }
+        
+        // 移动敌人
+        function moveEnemies() {
+            for (let i = gameState.enemies.length - 1; i >= 0; i--) {
+                const enemy = gameState.enemies[i];
+                enemy.y += enemy.speed;
+                enemy.element.style.top = `${enemy.y}px`;
+                
+                // 移除超出屏幕的敌人
+                if (enemy.y > window.innerHeight) {
+                    enemy.element.remove();
+                    gameState.enemies.splice(i, 1);
+                }
+            }
+        }
+        
+        // 移动金币
+        function moveCoins() {
+            for (let i = gameState.coins.length - 1; i >= 0; i--) {
+                const coin = gameState.coins[i];
+                coin.y += coin.speed;
+                coin.element.style.top = `${coin.y}px`;
+                
+                // 移除超出屏幕的金币
+                if (coin.y > window.innerHeight) {
+                    coin.element.remove();
+                    gameState.coins.splice(i, 1);
+                }
+            }
+        }
+        
+        // 检测碰撞
+        function checkCollisions() {
+            // 子弹与敌人碰撞
+            for (let i = gameState.bullets.length - 1; i >= 0; i--) {
+                const bullet = gameState.bullets[i];
+                const bulletRect = bullet.element.getBoundingClientRect();
+                
+                for (let j = gameState.enemies.length - 1; j >= 0; j--) {
+                    const enemy = gameState.enemies[j];
+                    const enemyRect = enemy.element.getBoundingClientRect();
+                    
+                    if (isColliding(bulletRect, enemyRect)) {
+                        // 子弹击中敌人
+                        bullet.element.remove();
+                        gameState.bullets.splice(i, 1);
+                        
+                        enemy.element.remove();
+                        gameState.enemies.splice(j, 1);
+                        
+                        // 增加分数
+                        const scoreIncrease = gameState.player.items.doubleScore ? 10 : 5;
+                        gameState.player.score += scoreIncrease;
+                        elements.scoreDisplay.textContent = `分数: ${gameState.player.score}`;
+                        
+                        break;
+                    }
+                }
+            }
+            
+            // 玩家与敌人碰撞
+            const playerRect = elements.player.getBoundingClientRect();
+            
+            for (let i = gameState.enemies.length - 1; i >= 0; i--) {
+                const enemy = gameState.enemies[i];
+                const enemyRect = enemy.element.getBoundingClientRect();
+                
+                if (isColliding(playerRect, enemyRect)) {
+                    // 玩家被敌人击中
+                    enemy.element.remove();
+                    gameState.enemies.splice(i, 1);
+                    
+                    // 检查是否有护盾
+                    if (gameState.player.items.shield) {
+                        gameState.player.items.shield = false;
+                        alert('护盾抵挡了一次伤害！');
+                    } else {
+                        gameState.player.health--;
+                        elements.healthDisplay.textContent = `生命: ${gameState.player.health}`;
+                        
+                        if (gameState.player.health <= 0) {
+                            gameOver();
+                        }
+                    }
+                }
+            }
+            
+            // 玩家与金币碰撞
+            for (let i = gameState.coins.length - 1; i >= 0; i--) {
+                const coin = gameState.coins[i];
+                const coinRect = coin.element.getBoundingClientRect();
+                
+                if (isColliding(playerRect, coinRect)) {
+                    // 玩家收集金币
+                    coin.element.remove();
+                    gameState.coins.splice(i, 1);
+                    
+                    // 增加分数
+                    gameState.player.score += coin.value;
+                    elements.scoreDisplay.textContent = `分数: ${gameState.player.score}`;
+                }
+            }
+        }
+        
+        // 碰撞检测
+        function isColliding(rect1, rect2) {
+            return !(
+                rect1.right < rect2.left || 
+                rect1.left > rect2.right || 
+                rect1.bottom < rect2.top || 
+                rect1.top > rect2.bottom
+            );
+        }
+        
+        // 游戏结束
+        function gameOver() {
+            gameState.gameActive = false;
+            
+            // 将分数转化为金币 (10分 = 1金币)
+            const earnedCoins = Math.floor(gameState.player.score / 10);
+            gameState.player.coins += earnedCoins;
+            
+            // 保存玩家数据
+            savePlayerDataToStorage(gameState.player.name, {
+                coins: gameState.player.coins,
+                items: gameState.player.items
+            });
+            
+            elements.finalScore.textContent = `最终分数: ${gameState.player.score} (获得 ${earnedCoins} 金币)`;
+            elements.gameOver.style.display = 'flex';
+        }
+        
+        // 发射子弹
+        function fireBullet() {
+            if (!gameState.gameActive) return;
+            
+            const now = Date.now();
+            if (now - gameState.lastFireTime < gameState.fireCooldown) return;
+            
+            gameState.lastFireTime = now;
+            
+            const bullet = document.createElement('div');
+            bullet.className = 'bullet';
+            bullet.style.left = `${gameState.player.position - 5}px`;
+            bullet.style.top = `${window.innerHeight - 150}px`;
+            elements.gameArea.appendChild(bullet);
+            
+            gameState.bullets.push({
+                element: bullet,
+                x: gameState.player.position - 5,
+                y: window.innerHeight - 150
+            });
+        }
+        
+        // 购买物品
+        function buyItem(itemType, price) {
+            if (gameState.player.coins < price) {
+                alert('金币不足！');
+                return false;
+            }
+            
+            gameState.player.coins -= price;
+            
+            switch(itemType) {
+                case 'health':
+                    gameState.player.health++;
+                    break;
+                case 'double':
+                    gameState.player.items.doubleScore = true;
+                    break;
+                case 'shield':
+                    gameState.player.items.shield = true;
+                    break;
+            }
+            
+            // 保存玩家数据
+            savePlayerDataToStorage(gameState.player.name, {
+                coins: gameState.player.coins,
+                items: gameState.player.items
+            });
+            
+            updatePlayerDataUI();
+            return true;
+        }
+        
+        // 初始化
+        window.addEventListener('load', function() {
+            checkOrientation();
+            window.addEventListener('resize', checkOrientation);
+            
+            // 开场动画20秒
+            setTimeout(function() {
+                elements.splashScreen.style.display = 'none';
+                showScreen('login');
+            }, 20000);
+            
+            // 登录/注册切换
+            document.getElementById('show-register').addEventListener('click', function() {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+            });
+            
+            document.getElementById('show-login').addEventListener('click', function() {
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+            });
+            
+            // 登录按钮
+            document.getElementById('login-btn').addEventListener('click', function() {
+                const username = elements.usernameInput.value.trim();
+                const password = elements.passwordInput.value.trim();
+                
+                if (!username || !password) {
+                    alert('请输入用户名和密码');
+                    return;
+                }
+                
+                // 检查账户是否存在
+                if (!accountExists(username)) {
+                    if (confirm('账户不存在，是否要注册新账户？')) {
+                        document.getElementById('login-form').style.display = 'none';
+                        document.getElementById('register-form').style.display = 'block';
+                        elements.regUsernameInput.value = username;
+                        elements.regPasswordInput.value = password;
+                        elements.regPassword2Input.value = password;
+                    }
+                    return;
+                }
+                
+                // 验证密码
+                if (!validateAccount(username, password)) {
+                    alert('密码错误');
+                    return;
+                }
+                
+                // 登录成功，加载玩家数据
+                gameState.player.name = username;
+                const playerData = getPlayerDataFromStorage(username);
+                gameState.player.coins = playerData.coins;
+                gameState.player.items = playerData.items;
+                
+                elements.playerName.textContent = username;
+                elements.playerAvatar.textContent = username.charAt(0).toUpperCase();
+                
+                showScreen('menu');
+            });
+            
+            // 注册按钮
+            document.getElementById('register-btn').addEventListener('click', function() {
+                const username = elements.regUsernameInput.value.trim();
+                const password = elements.regPasswordInput.value.trim();
+                const password2 = elements.regPassword2Input.value.trim();
+                
+                if (!username || !password || !password2) {
+                    alert('请填写所有字段');
+                    return;
+                }
+                
+                if (password !== password2) {
+                    alert('两次输入的密码不一致');
+                    return;
+                }
+                
+                // 检查用户名是否已存在
+                if (accountExists(username)) {
+                    alert('用户名已存在');
+                    return;
+                }
+                
+                // 注册新账户
+                registerAccount(username, password);
+                alert('注册成功！');
+                
+                // 自动填充登录表单
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+                elements.usernameInput.value = username;
+                elements.passwordInput.value = password;
+            });
+            
+            // 主菜单按钮
+            elements.startGameBtn.addEventListener('click', function() {
+                showScreen('game');
+                elements.gameArea.style.display = 'block';
+                initGame();
+            });
+            
+            elements.shopBtn.addEventListener('click', function() {
+                showScreen('shop');
+            });
+            
+            elements.settingsBtn.addEventListener('click', function() {
+                showScreen('settings');
+            });
+            
+            elements.quitGameBtn.addEventListener('click', function() {
+                showScreen('login');
+            });
+            
+            // 返回按钮
+            elements.backToMenuBtn.addEventListener('click', function() {
+                showScreen('menu');
+            });
+            
+            elements.backToMenuFromShop.addEventListener('click', function() {
+                showScreen('menu');
+            });
+            
+            elements.backToMenuFromSettings.addEventListener('click', function() {
+                showScreen('menu');
+            });
+            
+            // 商店购买按钮
+            elements.buyHealthBtn.addEventListener('click', function() {
+                if (buyItem('health', 100)) {
+                    alert('购买成功！生命值+1');
+                }
+            });
+            
+            elements.buyDoubleBtn.addEventListener('click', function() {
+                if (buyItem('double', 200)) {
+                    alert('购买成功！下次游戏得分翻倍');
+                }
+            });
+            
+            elements.buyShieldBtn.addEventListener('click', function() {
+                if (buyItem('shield', 150)) {
+                    alert('购买成功！获得一个护盾');
+                }
+            });
+            
+            // 重新开始按钮
+            elements.restartBtn.addEventListener('click', function() {
+                elements.gameOver.style.display = 'none';
+                initGame();
+            });
+            
+            // 键盘控制
+            window.addEventListener('keydown', function(e) {
+                gameState.keysPressed[e.key] = true;
+                
+                if (e.key === 'ArrowLeft') {
+                    gameState.isMovingLeft = true;
+                } else if (e.key === 'ArrowRight') {
+                    gameState.isMovingRight = true;
+                } else if (e.key === ' ' || e.key === 'Spacebar') {
+                    fireBullet();
+                }
+            });
+            
+            window.addEventListener('keyup', function(e) {
+                gameState.keysPressed[e.key] = false;
+                
+                if (e.key === 'ArrowLeft') {
+                    gameState.isMovingLeft = false;
+                } else if (e.key === 'ArrowRight') {
+                    gameState.isMovingRight = false;
+                }
+            });
+            
+            // 触摸控制 - 移动按钮
+            elements.leftBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                gameState.isMovingLeft = true;
+                gameState.isMovingRight = false;
+            });
+            
+            elements.leftBtn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                gameState.isMovingLeft = false;
+            });
+            
+            elements.rightBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                gameState.isMovingRight = true;
+                gameState.isMovingLeft = false;
+            });
+            
+            elements.rightBtn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                gameState.isMovingRight = false;
+            });
+            
+            // 触摸控制 - 发射按钮
+            elements.fireBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                fireBullet();
+            });
+            
+            // 点击发射按钮
+            elements.fireBtn.addEventListener('click', function() {
+                fireBullet();
+            });
+            
+            // 点击游戏区域发射子弹
+            elements.gameArea.addEventListener('click', function(e) {
+                // 只有当点击的不是控制按钮时才发射子弹
+                if (!e.target.closest('.control-btn')) {
+                    fireBullet();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
